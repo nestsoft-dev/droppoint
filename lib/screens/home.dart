@@ -12,6 +12,7 @@ import '../constants/constants.dart';
 import 'airtime.dart';
 import 'data.dart';
 import 'electricity.dart';
+import 'history.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -126,7 +127,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    return StreamBuilder(
+    return StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
             .doc(FirebaseAuth.instance.currentUser!.uid)
@@ -136,7 +137,10 @@ class _HomePageState extends State<HomePage> {
             return Center(
               child: Text('Something went wrong'),
             );
-          } else if (snapshot.hasData) {
+          } else if (snapshot.hasData && snapshot.data!.exists) {
+            final name = snapshot.data!.get('name');
+            final balance = double.parse(snapshot.data!.get('balance'));
+            showMoney = balance.toStringAsFixed(2);
             return SafeArea(
               child: Container(
                 padding: EdgeInsets.all(10),
@@ -145,7 +149,7 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('$_greeting ikenna'),
+                      Text('$_greeting $name'),
                       Row(
                         children: [
                           Icon(Icons.support_agent),
@@ -188,30 +192,40 @@ class _HomePageState extends State<HomePage> {
                                     height: 15,
                                   ),
                                   Text(
-                                    '${snapshot!.data!['balance']}',
+                                    '$showMoney',
                                     style: TextStyle(
-                                        color: Colors.white, fontSize: 16),
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
 
                               //2nd child
-                              Row(
-                                children: [
-                                  Text(
-                                    'Transaction History',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16),
-                                  ),
-                                  SizedBox(
-                                    width: 10,
-                                  ),
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white,
-                                    size: 15,
-                                  )
-                                ],
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => HistoryPage()));
+                                },
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'Transaction History',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 16),
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: Colors.white,
+                                      size: 15,
+                                    )
+                                  ],
+                                ),
                               )
                             ],
                           ),
@@ -373,17 +387,28 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(
                     height: 10,
                   ),
-                  StreamBuilder(
+                  StreamBuilder<DocumentSnapshot>(
                       stream: FirebaseFirestore.instance
                           .collection('history')
-                          .doc(FirebaseAuth.instance.currentUser!.uid).collection('MyHistory')
+                          .doc(FirebaseAuth.instance.currentUser!.uid)
                           .snapshots(),
+                      // .collection('history')
+                      // .doc(FirebaseAuth.instance.currentUser!.uid)
+                      // .collection('MyHistory')
+                      // .snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
                           return Center(
                             child: Text('Something went wrong'),
                           );
-                        } else if (snapshot.hasData) {
+                        } else if (snapshot.hasData && snapshot.data!.exists) {
+                          final title = snapshot.data!.get('title');
+                          final des = snapshot.data!.get('des');
+                          final imagePath = snapshot.data!.get('imagePath');
+                          final amount =
+                              double.parse(snapshot.data!.get('amount'));
+                          final time = snapshot.data!.get('time');
+                          bool isDebit = snapshot.data!.get('isDebit') as bool;
                           return Expanded(
                             child: ListView.builder(
                                 itemCount: 4,
@@ -396,8 +421,10 @@ class _HomePageState extends State<HomePage> {
                                       decoration: BoxDecoration(
                                           border: Border.all(
                                               width: 1,
-                                              color: const Color.fromARGB(
-                                                  255, 233, 233, 233)),
+                                              color: isDebit
+                                                  ? Colors.redAccent
+                                                  : Color.fromARGB(
+                                                      255, 233, 233, 233)),
                                           borderRadius:
                                               BorderRadius.circular(8)),
                                       child: Row(
@@ -412,7 +439,7 @@ class _HomePageState extends State<HomePage> {
                                                       BorderRadius.circular(60),
                                                   image: DecorationImage(
                                                       image: AssetImage(
-                                                          'assets/mtnlogo.jpg'),
+                                                          '$imagePath'),
                                                       fit: BoxFit.fill)),
                                             ),
                                             SizedBox(
@@ -423,7 +450,7 @@ class _HomePageState extends State<HomePage> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Airtime purchase',
+                                                  '$title',
                                                   style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold),
@@ -432,15 +459,17 @@ class _HomePageState extends State<HomePage> {
                                                   height: 8,
                                                 ),
                                                 Text(
-                                                    'You purchased MTN airtime for 09138473122'),
+                                                    '$des'),
                                               ],
                                             ),
                                             Center(
                                                 child: Text(
-                                              '-\₦245.15',
+                                              isDebit?'-\₦$amount': '+\₦$amount',
                                               style: TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  color: Colors.red),
+                                                  color: isDebit
+                                                      ? Colors.red
+                                                      : Colors.green),
                                             )),
                                           ]),
                                     ),
@@ -448,7 +477,9 @@ class _HomePageState extends State<HomePage> {
                                 }),
                           );
                         } else {
-                          return Center(child: Text('History is empty'),);
+                          return Center(
+                            child: Text('History is empty'),
+                          );
                         }
                       })
                 ]),

@@ -18,7 +18,7 @@ class _AirtimeState extends State<Airtime> {
   TextEditingController amount = TextEditingController();
   double balance = 0;
   bool isLoading = false;
-  
+
   bool setallData = true;
   String name = '';
   String showMoney = '';
@@ -229,53 +229,60 @@ class _AirtimeState extends State<Airtime> {
                   ),
                 )
               : GestureDetector(
-            onTap: () async {
-              if (amount.text == '' || phoneNumber.text == '') {
-                CoolAlert.show(
-                  context: context,
-                  type: CoolAlertType.error,
-                  text: "Please check inputs",
-                );
-              } else if (double.parse(amount.text) > money) {
-                CoolAlert.show(
-                  context: context,
-                  type: CoolAlertType.error,
-                  text: "Low balance",
-                );
-              } else {
-                setState(() {
-                  isLoading = true;
-                });
-                await httpHelper.airtimePurchase(amount: double.parse(amount.text), context: context, currentBalance: money,
-                 networdId: selectedChipIndex, phoneNumber: phoneNumber.text);
-                // purchaseAirtime(
-                //     double.parse(amount.text), balance, phoneNumber.text);
-                  await getMyData();
-                setState(() {
-                  isLoading = false;
-                });
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
-              child: Container(
-                height: 50,
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                    color: Colors.red, borderRadius: BorderRadius.circular(8)),
-                child: Center(
-                  child: isLoading
-                      ? CircularProgressIndicator(
-                          color: Colors.white,
-                        )
-                      : Text(
-                          'Purchase Airtime',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
-                ),
-              ),
-            ),
-          )
+                  onTap: () async {
+                    if (amount.text == '' || phoneNumber.text == '') {
+                      CoolAlert.show(
+                        context: context,
+                        type: CoolAlertType.error,
+                        text: "Please check inputs",
+                      );
+                    } else if (double.parse(amount.text) > money ||
+                        double.parse(amount.text) < 0) {
+                      CoolAlert.show(
+                        context: context,
+                        type: CoolAlertType.error,
+                        text: "Low balance",
+                      );
+                    } else {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      await httpHelper.airtimePurchase(
+                          amount: double.parse(amount.text),
+                          context: context,
+                          currentBalance: money,
+                          networdId: selectedChipIndex,
+                          phoneNumber: phoneNumber.text);
+                      // purchaseAirtime(
+                      //     double.parse(amount.text), balance, phoneNumber.text);
+                      await getMyData();
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25),
+                    child: Container(
+                      height: 50,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(8)),
+                      child: Center(
+                        child: isLoading
+                            ? CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : Text(
+                                'Purchase Airtime',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18),
+                              ),
+                      ),
+                    ),
+                  ),
+                )
           // MyButton(
           //   isLoading: isLoading,
           //   onTap: () {

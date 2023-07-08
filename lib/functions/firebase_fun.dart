@@ -146,11 +146,11 @@ class FirebaseFun {
   Future<void> uploadhistory(String title, String desc, String imagePath,
       double amount, bool isDebit, String time, BuildContext context) async {
     try {
+       // .collection(firebase.currentUser!.uid)
       await firestore
           .collection('history')
           .doc(firebase.currentUser!.uid)
-          .collection(firebase.currentUser!.uid)
-          .add({
+          .set({
         'title': title,
         'des': desc,
         'imagePath': imagePath,
